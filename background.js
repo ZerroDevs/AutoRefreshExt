@@ -1,5 +1,5 @@
-// Add base64 icon data
-const ICON_DATA = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0OCA0OCI+PHBhdGggZmlsbD0iIzIxOTZGMyIgZD0iTTI0IDRDMTIuOTUgNCA0IDEyLjk1IDQgMjRzOC45NSAyMCAyMCAyMCAyMC04Ljk1IDIwLTIwUzM1LjA1IDQgMjQgNHptMCAzNmMtOC44MiAwLTE2LTcuMTgtMTYtMTZTMTUuMTggOCAyNCA4czE2IDcuMTggMTYgMTYtNy4xOCAxNi0xNiAxNnoiLz48cGF0aCBmaWxsPSIjMjE5NkYzIiBkPSJNMjQgMTJ2MTJsOCA4LTIuODMgMi44M0wyMCAyNS42NlYxMmg0eiIvPjwvc3ZnPg==';
+
+
 
 let refreshTimers = {};
 let refreshCounts = {};
@@ -136,21 +136,28 @@ function stopRefreshTimer(tabId) {
 function showNotification(title, message) {
 	const options = {
 		type: 'basic',
-		iconUrl: ICON_DATA,
+		iconUrl: chrome.runtime.getURL('icons/icon48.svg'),
 		title: 'AutoRefresh',
 		message: `${title}: ${message}`,
 		priority: 2,
-		requireInteraction: false
+		requireInteraction: false,
+		silent: false,
+		eventTime: Date.now()  // Add timestamp to ensure unique notifications
 	};
 	
-	chrome.notifications.create('', options, (notificationId) => {
+	// Use a unique ID for each notification
+	const notificationId = `refresh_${Date.now()}`;
+	
+	chrome.notifications.create(notificationId, options, (id) => {
 		if (chrome.runtime.lastError) {
 			console.error('Notification error:', chrome.runtime.lastError);
 		} else {
-			console.log('Notification created:', notificationId);
+			console.log('Notification created:', id);
 		}
 	});
 }
+
+
 
 function updatePageStatus(tabId, isActive) {
 	chrome.storage.local.get(['pages'], (result) => {

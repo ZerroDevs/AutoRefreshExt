@@ -12,16 +12,22 @@
 	"action": {
 		"default_popup": "popup.html",
 		"default_icon": {
-			"16": "icon16.svg",
-			"48": "icon48.svg"
+			"16": "icons/icon16.svg",
+			"48": "icons/icon48.svg"
 		}
 	},
 	"icons": {
-		"16": "icon16.svg",
-		"48": "icon48.svg"
+		"16": "icons/icon16.svg",
+		"48": "icons/icon48.svg"
 	},
+	"web_accessible_resources": [{
+		"resources": [
+			"icons/*.svg",
+			"notification-icon.svg"
+		],
+		"matches": ["<all_urls>"]
+	}],
 	"background": {
-		"service_worker": "background.js",
-		"type": "module"
+		"service_worker": "background.js"
 	}
 }
