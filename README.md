@@ -12,11 +12,12 @@
 
 ## ✨ Features
 
-- 🎨 Modern UI with Light/Dark theme support
+- 🎨 Modern UI with Light/Dark theme support and font size controls
 - ⚡ Quick preset refresh intervals (1, 3, 5, 10 minutes)
 - 🎯 Custom refresh intervals with seconds/minutes/hours options
 - 🔒 Set refresh limits for controlled automation
-- 📊 Website management dashboard
+- 📊 Comprehensive statistics dashboard
+- ⚠️ Smart form detection to prevent data loss
 - 💪 Memory-efficient and performance-optimized
 - 🌐 Works across all Chrome-based browsers
 
@@ -36,25 +37,29 @@
 2. Choose a preset refresh interval or set a custom time
 3. Optionally set a refresh limit
 4. The extension will automatically refresh your active tab based on your settings
+5. Use font size controls for better readability
+6. Monitor refresh statistics in the Stats tab
 
 ## 🛠️ Configuration
 
 ### Refresh Intervals
 - Quick presets: 1, 3, 5, and 10 minutes
 - Custom intervals support:
-	- Seconds
-	- Minutes
-	- Hours
+  - Seconds
+  - Minutes
+  - Hours
 
-### Theme Options
-- Light theme for regular usage
-- Dark theme for reduced eye strain
+### Theme and Display
+- Light/Dark theme toggle
+- Adjustable font size (A+/A-)
+- Statistics dashboard
 
 ### Permissions
 The extension requires the following permissions:
 - `storage`: To save your refresh settings
 - `tabs`: To manage tab refreshing
 - `activeTab`: To interact with the current tab
+- `scripting`: For smart form detection
 
 ## 🤝 Contributing
 

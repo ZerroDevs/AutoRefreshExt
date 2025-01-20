@@ -1,8 +1,8 @@
 {
 	"manifest_version": 3,
 	"name": "AutoRefresh",
-	"version": "1.1",
-	"description": "Auto refresh pages with customizable timers",
+	"version": "1.2",
+	"description": "Auto refresh pages with customizable timers and smart features",
 	"permissions": [
 		"storage",
 		"tabs",
