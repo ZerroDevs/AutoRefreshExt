@@ -12,15 +12,16 @@
 	"action": {
 		"default_popup": "popup.html",
 		"default_icon": {
-			"16": "icon16.png",
-			"48": "icon48.png"
+			"16": "icon16.svg",
+			"48": "icon48.svg"
 		}
 	},
 	"icons": {
-		"16": "icon16.png",
-		"48": "icon48.png"
+		"16": "icon16.svg",
+		"48": "icon48.svg"
 	},
 	"background": {
-		"service_worker": "background.js"
+		"service_worker": "background.js",
+		"type": "module"
 	}
 }
