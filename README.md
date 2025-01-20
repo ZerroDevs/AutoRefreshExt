@@ -1,12 +1,13 @@
 <div align="center">
-	<img src="icons/icon48.svg" alt="AutoRefreshExt Logo" width="128" height="128">
-	<h1>🔄 AutoRefreshExt</h1>
+	<img src="icons/icon48.svg" alt="AutoRefresh Logo" width="128" height="128">
+	<h1>🔄 AutoRefresh</h1>
 	
 	<p>A powerful and elegant Chrome extension for automated webpage refreshing</p>
 
 	[![GitHub license](https://img.shields.io/github/license/ZerroDevs/AutoRefreshExt)](https://github.com/ZerroDevs/AutoRefreshExt/blob/main/LICENSE)
 	[![GitHub stars](https://img.shields.io/github/stars/ZerroDevs/AutoRefreshExt)](https://github.com/ZerroDevs/AutoRefreshExt/stargazers)
 	[![GitHub issues](https://img.shields.io/github/issues/ZerroDevs/AutoRefreshExt)](https://github.com/ZerroDevs/AutoRefreshExt/issues)
+	![Version](https://img.shields.io/badge/version-1.1-blue)
 </div>
 
 ## ✨ Features
@@ -22,9 +23,9 @@
 ## 🚀 Installation
 
 1. Clone this repository:
-   ```bash
-   git clone https://github.com/ZerroDevs/AutoRefreshExt.git
-   ```
+	 ```bash
+	 git clone https://github.com/ZerroDevs/AutoRefreshExt.git
+	 ```
 2. Open Chrome and navigate to `chrome://extensions/`
 3. Enable "Developer mode" in the top right
 4. Click "Load unpacked" and select the extension directory
@@ -48,6 +49,12 @@
 ### Theme Options
 - Light theme for regular usage
 - Dark theme for reduced eye strain
+
+### Permissions
+The extension requires the following permissions:
+- `storage`: To save your refresh settings
+- `tabs`: To manage tab refreshing
+- `activeTab`: To interact with the current tab
 
 ## 🤝 Contributing
 
