@@ -7,7 +7,7 @@
   [![GitHub license](https://img.shields.io/github/license/ZerroDevs/AutoRefreshExt)](https://github.com/ZerroDevs/AutoRefreshExt/blob/main/LICENSE)
   [![GitHub stars](https://img.shields.io/github/stars/ZerroDevs/AutoRefreshExt)](https://github.com/ZerroDevs/AutoRefreshExt/stargazers)
   [![GitHub issues](https://img.shields.io/github/issues/ZerroDevs/AutoRefreshExt)](https://github.com/ZerroDevs/AutoRefreshExt/issues)
-  ![Version](https://img.shields.io/badge/version-1.1-blue)
+  ![Version](https://img.shields.io/badge/version-1.2-blue)
 </div>
 
 ## ✨ Features
