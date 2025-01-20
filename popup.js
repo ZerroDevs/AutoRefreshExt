@@ -59,7 +59,8 @@ document.addEventListener('DOMContentLoaded', () => {
 			chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
 				const tab = tabs[0];
 				const domain = new URL(tab.url).hostname;
-				const interval = Math.floor(minutes * 60 * 1000); // Ensure whole number
+				// Convert minutes to milliseconds (1 minute = 60,000 milliseconds)
+				const interval = minutes * 60000;
 
 				if (pages[tab.id]) {
 					pages[tab.id] = {
@@ -87,14 +88,12 @@ document.addEventListener('DOMContentLoaded', () => {
 					};
 				}
 
-				// Save both pages and notification preference
 				chrome.storage.local.set({ 
 					pages: pages,
 					notifyOnRefresh: notify 
 				}, () => {
 					updatePagesList();
 					document.querySelector('.tab[data-tab="manage"]').click();
-					// Send message to background script
 					chrome.runtime.sendMessage({
 						action: 'startRefresh',
 						tabId: tab.id,
@@ -109,6 +108,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		});
 	});
 
+
 	// Add event listener for custom time
 	document.getElementById('addCustom').addEventListener('click', () => {
 		const time = parseFloat(document.getElementById('customTime').value);
@@ -121,13 +121,13 @@ document.addEventListener('DOMContentLoaded', () => {
 		let milliseconds;
 		switch(unit) {
 			case 'seconds':
-				milliseconds = Math.floor(time * 1000);
+				milliseconds = time * 1000;
 				break;
 			case 'minutes':
-				milliseconds = Math.floor(time * 60 * 1000);
+				milliseconds = time * 60000;
 				break;
 			case 'hours':
-				milliseconds = Math.floor(time * 60 * 60 * 1000);
+				milliseconds = time * 3600000;
 				break;
 		}
 

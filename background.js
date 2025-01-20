@@ -1,3 +1,6 @@
+// Add base64 icon data
+const ICON_DATA = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0OCA0OCI+PHBhdGggZmlsbD0iIzIxOTZGMyIgZD0iTTI0IDRDMTIuOTUgNCA0IDEyLjk1IDQgMjRzOC45NSAyMCAyMCAyMCAyMC04Ljk1IDIwLTIwUzM1LjA1IDQgMjQgNHptMCAzNmMtOC44MiAwLTE2LTcuMTgtMTYtMTZTMTUuMTggOCAyNCA4czE2IDcuMTggMTYgMTYtNy4xOCAxNi0xNiAxNnoiLz48cGF0aCBmaWxsPSIjMjE5NkYzIiBkPSJNMjQgMTJ2MTJsOCA4LTIuODMgMi44M0wyMCAyNS42NlYxMmg0eiIvPjwvc3ZnPg==';
+
 let refreshTimers = {};
 let refreshCounts = {};
 let activePages = {};
@@ -42,13 +45,12 @@ function startRefreshTimer(tabId, interval, limit = 0, notify = false) {
 		lastRefresh: Date.now()
 	};
 
-	// Create notification for timer start
 	if (notify) {
-		showNotification('Timer Started', `Auto-refresh started for tab (every ${formatTime(interval)})`);
+		showNotification('Timer Started', `Auto-refresh started (every ${formatTime(interval)})`);
 	}
 
-	refreshTimers[tabId] = setInterval(() => {
-		if (activePages[tabId]?.isPaused) return;
+	function refresh() {
+		if (!activePages[tabId] || activePages[tabId].isPaused) return;
 
 		chrome.tabs.get(tabId, (tab) => {
 			if (chrome.runtime.lastError) {
@@ -79,7 +81,19 @@ function startRefreshTimer(tabId, interval, limit = 0, notify = false) {
 
 			updatePageStatus(tabId, true);
 		});
-	}, Math.max(1000, interval));
+	}
+
+	// Use recursive setTimeout for more accurate timing
+	function scheduleNextRefresh() {
+		refreshTimers[tabId] = setTimeout(() => {
+			refresh();
+			if (activePages[tabId] && !activePages[tabId].isPaused) {
+				scheduleNextRefresh();
+			}
+		}, interval);
+	}
+
+	scheduleNextRefresh();
 }
 
 // Add helper function for time formatting
@@ -110,7 +124,7 @@ function resumeRefreshTimer(tabId) {
 
 function stopRefreshTimer(tabId) {
 	if (refreshTimers[tabId]) {
-		clearInterval(refreshTimers[tabId]);
+		clearTimeout(refreshTimers[tabId]);
 		delete refreshTimers[tabId];
 		delete activePages[tabId];
 		delete refreshCounts[tabId];
@@ -118,17 +132,23 @@ function stopRefreshTimer(tabId) {
 	}
 }
 
+
 function showNotification(title, message) {
 	const options = {
 		type: 'basic',
-		iconUrl: 'icon48.svg',
+		iconUrl: ICON_DATA,
 		title: 'AutoRefresh',
 		message: `${title}: ${message}`,
-		priority: 2
+		priority: 2,
+		requireInteraction: false
 	};
 	
 	chrome.notifications.create('', options, (notificationId) => {
-		console.log('Notification created:', notificationId); // Debug log
+		if (chrome.runtime.lastError) {
+			console.error('Notification error:', chrome.runtime.lastError);
+		} else {
+			console.log('Notification created:', notificationId);
+		}
 	});
 }
 
