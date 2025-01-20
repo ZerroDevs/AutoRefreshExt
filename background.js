@@ -4,6 +4,44 @@
 let refreshTimers = {};
 let refreshCounts = {};
 let activePages = {};
+let refreshHistory = {};
+
+
+// Add form detection function with proper error handling
+function checkForForms(tabId) {
+	try {
+		chrome.scripting.executeScript({
+			target: { tabId },
+			function: () => {
+				try {
+					const forms = document.querySelectorAll('form');
+					const inputs = document.querySelectorAll('input[type="text"], textarea');
+					return {
+						hasForms: forms.length > 0,
+						hasFilledInputs: Array.from(inputs).some(input => input.value.length > 0)
+					};
+				} catch (e) {
+					console.error('Error in form detection script:', e);
+					return { hasForms: false, hasFilledInputs: false };
+				}
+			}
+		}, (results) => {
+			if (chrome.runtime.lastError) {
+				console.error('Error executing script:', chrome.runtime.lastError);
+				return;
+			}
+			if (results && results[0]?.result?.hasFilledInputs) {
+				chrome.action.setBadgeText({ text: '⚠️', tabId });
+				chrome.action.setBadgeBackgroundColor({ color: '#FFA500', tabId });
+			}
+		});
+	} catch (e) {
+		console.error('Error in checkForForms:', e);
+	}
+}
+
+
+
 
 // Listen for messages from popup
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
@@ -13,6 +51,19 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 			startRefreshTimer(message.tabId, message.interval, message.limit);
 			sendResponse({ success: true, message: 'Refresh timer started' });
 			break;
+		case 'getRefreshStats':
+			sendResponse({ 
+				stats: refreshHistory[message.tabId] || {
+					totalRefreshes: 0,
+					successfulRefreshes: 0,
+					failedRefreshes: 0,
+					lastRefreshTime: null,
+					averageInterval: 0
+				}
+			});
+			break;
+
+
 		case 'stopRefresh':
 			stopRefreshTimer(message.tabId);
 			sendResponse({ success: true, message: 'Refresh timer stopped' });
@@ -44,45 +95,66 @@ function startRefreshTimer(tabId, interval, limit = 0) {
 		lastRefresh: Date.now()
 	};
 
+	refreshHistory[tabId] = {
+		totalRefreshes: 0,
+		successfulRefreshes: 0,
+		failedRefreshes: 0,
+		lastRefreshTime: null,
+		averageInterval: interval
+	};
 
 	function refresh() {
 		if (!activePages[tabId] || activePages[tabId].isPaused) return;
 
-		chrome.tabs.get(tabId, (tab) => {
-			if (chrome.runtime.lastError) {
-				stopRefreshTimer(tabId);
-				updatePageStatus(tabId, false);
-				return;
-			}
+		try {
+			checkForForms(tabId);
+			
+			chrome.tabs.get(tabId, (tab) => {
+				if (chrome.runtime.lastError) {
+					console.error('Error getting tab:', chrome.runtime.lastError);
+					stopRefreshTimer(tabId);
+					updatePageStatus(tabId, false);
+					refreshHistory[tabId].failedRefreshes++;
+					return;
+				}
 
-			// Check refresh limit
-			if (activePages[tabId].limit > 0 && refreshCounts[tabId] >= activePages[tabId].limit) {
-				stopRefreshTimer(tabId);
+				if (activePages[tabId].limit > 0 && refreshCounts[tabId] >= activePages[tabId].limit) {
+					stopRefreshTimer(tabId);
+					return;
+				}
 
+				chrome.tabs.reload(tabId, () => {
+					if (chrome.runtime.lastError) {
+						console.error('Error reloading tab:', chrome.runtime.lastError);
+						refreshHistory[tabId].failedRefreshes++;
+						return;
+					}
 
-				return;
-			}
-
-			// Refresh the tab
-			chrome.tabs.reload(tabId);
-			refreshCounts[tabId] = (refreshCounts[tabId] || 0) + 1;
-			activePages[tabId].lastRefresh = Date.now();
-
-
-
-
-			updatePageStatus(tabId, true);
-		});
+					refreshCounts[tabId] = (refreshCounts[tabId] || 0) + 1;
+					activePages[tabId].lastRefresh = Date.now();
+					refreshHistory[tabId].totalRefreshes++;
+					refreshHistory[tabId].successfulRefreshes++;
+					refreshHistory[tabId].lastRefreshTime = Date.now();
+					updatePageStatus(tabId, true);
+				});
+			});
+		} catch (e) {
+			console.error('Error in refresh function:', e);
+			refreshHistory[tabId].failedRefreshes++;
+		}
 	}
 
-	// Use recursive setTimeout for more accurate timing
 	function scheduleNextRefresh() {
-		refreshTimers[tabId] = setTimeout(() => {
-			refresh();
-			if (activePages[tabId] && !activePages[tabId].isPaused) {
-				scheduleNextRefresh();
-			}
-		}, interval);
+		try {
+			refreshTimers[tabId] = setTimeout(() => {
+				refresh();
+				if (activePages[tabId] && !activePages[tabId].isPaused) {
+					scheduleNextRefresh();
+				}
+			}, interval);
+		} catch (e) {
+			console.error('Error scheduling refresh:', e);
+		}
 	}
 
 	scheduleNextRefresh();

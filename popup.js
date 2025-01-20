@@ -1,6 +1,8 @@
 let pages = {};
+let currentFontSize = 16; // Default font size in pixels
 
 // Theme handling
+
 function toggleTheme() {
 	const html = document.documentElement;
 	const currentTheme = html.getAttribute('data-theme');
@@ -17,6 +19,22 @@ chrome.storage.local.get(['theme'], (result) => {
 });
 
 document.addEventListener('DOMContentLoaded', () => {
+	// Load saved font size
+	chrome.storage.local.get(['fontSize'], (result) => {
+		if (result.fontSize) {
+			setFontSize(result.fontSize);
+		}
+	});
+
+	// Font size controls
+	document.querySelectorAll('.font-size-btn').forEach(btn => {
+		btn.addEventListener('click', () => {
+			const action = btn.dataset.action;
+			const newSize = action === 'increase' ? currentFontSize + 2 : currentFontSize - 2;
+			setFontSize(newSize);
+		});
+	});
+
 	// Theme toggle
 	document.querySelector('.theme-toggle').addEventListener('click', toggleTheme);
 
@@ -143,7 +161,7 @@ document.addEventListener('DOMContentLoaded', () => {
 					isActive: true,
 					isPaused: false,
 					refreshLimit: refreshLimit,
-					notify: notify,
+
 					refreshCount: 0
 				};
 			}
@@ -165,6 +183,73 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 
+
+
+// Font size control function
+function setFontSize(size) {
+	if (size >= 12 && size <= 24) {
+		currentFontSize = size;
+		document.body.style.fontSize = `${size}px`;
+		chrome.storage.local.set({ fontSize: size });
+	}
+}
+
+
+
+
+// Stats update function
+function updateStats() {
+	const statsContent = document.getElementById('statsContent');
+	if (!statsContent) return;
+	
+	statsContent.innerHTML = '';
+	
+	if (Object.keys(pages).length === 0) {
+		statsContent.innerHTML = '<div style="text-align: center; color: #666; padding: 20px;">No active pages to show statistics</div>';
+		return;
+	}
+
+	Object.entries(pages).forEach(([tabId, page]) => {
+		chrome.runtime.sendMessage({
+			action: 'getRefreshStats',
+			tabId: parseInt(tabId)
+		}, (response) => {
+			if (chrome.runtime.lastError) {
+				console.error('Error fetching stats:', chrome.runtime.lastError);
+				return;
+			}
+			
+			if (response && response.stats) {
+				const stats = response.stats;
+				const statsCard = document.createElement('div');
+				statsCard.className = 'stats-card';
+				
+				statsCard.innerHTML = `
+					<div class="stats-title">${page.title || 'Unknown Page'}</div>
+					<div class="stats-grid">
+						<div class="stats-item">
+							<div class="stats-value">${stats.totalRefreshes}</div>
+							<div class="stats-label">Total Refreshes</div>
+						</div>
+						<div class="stats-item">
+							<div class="stats-value">${stats.successfulRefreshes}</div>
+							<div class="stats-label">Successful</div>
+						</div>
+						<div class="stats-item">
+							<div class="stats-value">${stats.failedRefreshes}</div>
+							<div class="stats-label">Failed</div>
+						</div>
+						<div class="stats-item">
+							<div class="stats-value">${formatTime(stats.averageInterval || 0)}</div>
+							<div class="stats-label">Avg Interval</div>
+						</div>
+					</div>
+				`;
+				statsContent.appendChild(statsCard);
+			}
+		});
+	});
+}
 
 
 function updatePagesList() {
@@ -284,10 +369,14 @@ function updatePagesList() {
 				});
 
 				pagesList.appendChild(div);
+
 			});
 		});
 	});
 }
+
+// Add stats tab click handler
+document.querySelector('.tab[data-tab="stats"]').addEventListener('click', updateStats);
 
 
 

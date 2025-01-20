@@ -280,7 +280,56 @@
 		.footer a:hover {
 			text-decoration: underline;
 		}
+
+		.font-controls {
+			display: flex;
+			gap: 8px;
+		}
+		
+		.font-size-btn {
+			padding: 4px 8px;
+			font-size: 12px;
+			min-width: 32px;
+		}
+		
+		.stats-card {
+			background: var(--card-bg);
+			padding: 12px;
+			border-radius: 4px;
+			margin-bottom: 8px;
+		}
+		
+		.stats-title {
+			font-weight: 500;
+			margin-bottom: 8px;
+		}
+		
+		.stats-grid {
+			display: grid;
+			grid-template-columns: repeat(2, 1fr);
+			gap: 8px;
+		}
+		
+		.stats-item {
+			padding: 8px;
+			background: var(--hover-bg);
+			border-radius: 4px;
+			text-align: center;
+		}
+		
+		.stats-value {
+			font-size: 18px;
+			font-weight: 500;
+			color: var(--primary-color);
+		}
+		
+		.stats-label {
+			font-size: 12px;
+			color: var(--text-color);
+			opacity: 0.8;
+		}
 	</style>
+
 </head>
 <body>
 	<div class="header">
@@ -297,11 +346,16 @@
 				<path fill="currentColor" d="M20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69zM12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6 6 2.69 6 6-2.69 6-6 6zm0-10c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4z"/>
 			</svg>
 		</button>
+		<div class="font-controls">
+			<button class="font-size-btn" data-action="decrease" title="Decrease font size">A-</button>
+			<button class="font-size-btn" data-action="increase" title="Increase font size">A+</button>
+		</div>
 	</div>
 
 	<div class="tabs">
 		<div class="tab active" data-tab="add">Add Website</div>
 		<div class="tab" data-tab="manage">Manage Websites</div>
+		<div class="tab" data-tab="stats">Statistics</div>
 	</div>
 
 	<div class="tab-content active" id="add">
@@ -341,6 +395,13 @@
 		</div>
 	</div>
 
+	<div class="tab-content" id="stats">
+		<div class="container">
+			<div id="statsContent">
+				<!-- Statistics will be added here dynamically -->
+			</div>
+		</div>
+	</div>
 
 	<script src="popup.js"></script>
 	<div class="footer">
