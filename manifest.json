@@ -1,0 +1,13 @@
+{
+	"manifest_version": 3,
+	"name": "AutoRefresh",
+	"version": "1.0",
+	"description": "Auto refresh pages with customizable timers",
+	"permissions": ["storage", "tabs", "activeTab"],
+	"action": {
+		"default_popup": "popup.html"
+	},
+	"background": {
+		"service_worker": "background.js"
+	}
+}

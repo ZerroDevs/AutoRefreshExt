@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>AutoRefresh</title>
+	<style>
+		:root {
+			--primary-color: #2196F3;
+			--secondary-color: #1976D2;
+			--bg-color: #f5f5f5;
+			--text-color: #333;
+			--border-color: #ddd;
+		}
+
+		body {
+			width: 400px;
+			padding: 0;
+			margin: 0;
+			font-family: 'Segoe UI', system-ui, sans-serif;
+			background: var(--bg-color);
+		}
+
+		.header {
+			background: white;
+			padding: 15px;
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			border-bottom: 1px solid var(--border-color);
+		}
+
+		.logo {
+			display: flex;
+			align-items: center;
+			gap: 10px;
+		}
+
+		.logo-icon {
+			font-size: 24px;
+			color: var(--primary-color);
+			background: #e3f2fd;
+			padding: 8px;
+			border-radius: 8px;
+		}
+
+		.logo-text {
+			font-size: 20px;
+			font-weight: bold;
+			color: var(--text-color);
+		}
+
+		.tabs {
+			display: flex;
+			background: white;
+			padding: 0 15px;
+			border-bottom: 1px solid var(--border-color);
+		}
+
+		.tab {
+			padding: 12px 20px;
+			cursor: pointer;
+			border-bottom: 2px solid transparent;
+			color: #666;
+			transition: all 0.3s;
+		}
+
+		.tab.active {
+			color: var(--primary-color);
+			border-bottom-color: var(--primary-color);
+		}
+
+		.tab-content {
+			display: none;
+			padding: 15px;
+		}
+
+		.tab-content.active {
+			display: block;
+		}
+
+		.container {
+			background: white;
+			padding: 15px;
+			border-radius: 8px;
+			box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+			margin: 15px;
+		}
+
+		.timer-options {
+			display: grid;
+			grid-template-columns: repeat(2, 1fr);
+			gap: 8px;
+			margin-bottom: 15px;
+		}
+
+		button {
+			padding: 8px;
+			border: none;
+			border-radius: 4px;
+			background: var(--primary-color);
+			color: white;
+			cursor: pointer;
+			transition: all 0.2s;
+		}
+
+		button:hover {
+			background: var(--secondary-color);
+		}
+
+		.custom-time {
+			display: flex;
+			gap: 8px;
+			margin-bottom: 15px;
+		}
+
+		input[type="number"] {
+			width: 100px;
+			padding: 8px;
+			border: 1px solid var(--border-color);
+			border-radius: 4px;
+		}
+
+		select {
+			padding: 8px;
+			border: 1px solid var(--border-color);
+			border-radius: 4px;
+		}
+
+		.page-item {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			padding: 12px;
+			background: #f8f8f8;
+			border-radius: 4px;
+			margin-bottom: 8px;
+		}
+
+		.page-info {
+			flex-grow: 1;
+			margin-right: 10px;
+		}
+
+		.page-title {
+			font-weight: 500;
+			margin-bottom: 4px;
+		}
+
+		.page-meta {
+			font-size: 12px;
+			color: #666;
+			display: flex;
+			gap: 10px;
+		}
+
+		.status-badge {
+			padding: 2px 8px;
+			border-radius: 12px;
+			font-size: 12px;
+		}
+
+		.status-active {
+			background: #e8f5e9;
+			color: #2e7d32;
+		}
+
+		.status-inactive {
+			background: #ffebee;
+			color: #c62828;
+		}
+
+		.actions {
+			display: flex;
+			gap: 8px;
+		}
+
+		.edit-btn {
+			background: #4caf50;
+		}
+
+		.edit-btn:hover {
+			background: #388e3c;
+		}
+
+		.delete-btn {
+			background: #f44336;
+		}
+
+		.delete-btn:hover {
+			background: #d32f2f;
+		}
+	</style>
+</head>
+<body>
+	<div class="header">
+		<div class="logo">
+			<div class="logo-icon">⟳</div>
+			<div class="logo-text">AutoRefresher</div>
+		</div>
+	</div>
+
+	<div class="tabs">
+		<div class="tab active" data-tab="add">Add Website</div>
+		<div class="tab" data-tab="manage">Manage Websites</div>
+	</div>
+
+	<div class="tab-content active" id="add">
+		<div class="container">
+			<div class="timer-options">
+				<button data-time="1">1 min</button>
+				<button data-time="3">3 min</button>
+				<button data-time="5">5 min</button>
+				<button data-time="10">10 min</button>
+			</div>
+			
+			<div class="custom-time">
+				<input type="number" id="customTime" min="1" placeholder="Time">
+				<select id="timeUnit">
+					<option value="seconds">Seconds</option>
+					<option value="minutes">Minutes</option>
+					<option value="hours">Hours</option>
+				</select>
+				<button id="addCustom">Add</button>
+			</div>
+		</div>
+	</div>
+
+	<div class="tab-content" id="manage">
+		<div class="container">
+			<div id="pagesList">
+				<!-- Pages will be added here dynamically -->
+			</div>
+		</div>
+	</div>
+
+	<script src="popup.js"></script>
+</body>
+</html>
