@@ -55,13 +55,21 @@ document.addEventListener('DOMContentLoaded', () => {
 function addCurrentPage(interval) {
 	chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
 		const tab = tabs[0];
-		pages[tab.id] = {
-			url: tab.url,
-			title: tab.title,
-			interval: interval,
-			lastRefresh: Date.now(),
-			isActive: true
-		};
+		// Check if page is already added
+		if (pages[tab.id]) {
+			// Update existing entry instead of creating a new one
+			pages[tab.id].interval = interval;
+			pages[tab.id].lastRefresh = Date.now();
+		} else {
+			pages[tab.id] = {
+				url: tab.url,
+				title: tab.title,
+				interval: interval,
+				lastRefresh: Date.now(),
+				isActive: true
+			};
+		}
+		
 		chrome.storage.local.set({pages: pages}, () => {
 			updatePagesList();
 			// Switch to manage tab
@@ -86,7 +94,14 @@ function updatePagesList() {
 		return;
 	}
 
+	// Create a Set to track unique tab IDs
+	const processedTabs = new Set();
+
 	Object.entries(pages).forEach(([tabId, page]) => {
+		// Skip if we've already processed this tab
+		if (processedTabs.has(tabId)) return;
+		processedTabs.add(tabId);
+
 		// Check if tab still exists
 		chrome.tabs.get(parseInt(tabId), (tab) => {
 			const exists = !chrome.runtime.lastError;
@@ -107,8 +122,16 @@ function updatePagesList() {
 					</div>
 				</div>
 				<div class="actions">
-					<button class="edit-btn" title="Edit refresh time">⚙️</button>
-					<button class="delete-btn" title="Remove">✕</button>
+					<button class="edit-btn" title="Edit refresh time">
+						<svg viewBox="0 0 24 24" width="16" height="16">
+							<path fill="currentColor" d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.07.62-.07.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
+						</svg>
+					</button>
+					<button class="delete-btn" title="Remove">
+						<svg viewBox="0 0 24 24" width="16" height="16">
+							<path fill="currentColor" d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+						</svg>
+					</button>
 				</div>
 			`;
 
@@ -151,10 +174,10 @@ function updatePagesList() {
 // Format milliseconds to human readable time
 function formatTime(ms) {
 	if (ms < 60000) {
-		return `${ms/1000} seconds`;
+		return `${Math.round(ms/1000)} seconds`;
 	} else if (ms < 3600000) {
-		return `${ms/60000} minutes`;
+		return `${Math.round(ms/60000)} minutes`;
 	} else {
-		return `${ms/3600000} hours`;
+		return `${Math.round(ms/3600000)} hours`;
 	}
 }
