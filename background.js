@@ -4,26 +4,33 @@ let activePages = {};
 
 // Listen for messages from popup
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+	console.log('Received message:', message); // Debug log
 	switch (message.action) {
 		case 'startRefresh':
 			startRefreshTimer(message.tabId, message.interval, message.limit, message.notify);
+			sendResponse({ success: true, message: 'Refresh timer started' });
 			break;
 		case 'stopRefresh':
 			stopRefreshTimer(message.tabId);
+			sendResponse({ success: true, message: 'Refresh timer stopped' });
 			break;
 		case 'pauseRefresh':
 			pauseRefreshTimer(message.tabId);
+			sendResponse({ success: true, message: 'Refresh timer paused' });
 			break;
 		case 'resumeRefresh':
 			resumeRefreshTimer(message.tabId);
+			sendResponse({ success: true, message: 'Refresh timer resumed' });
 			break;
 		case 'getRefreshCount':
 			sendResponse({ count: refreshCounts[message.tabId] || 0 });
 			break;
 	}
+	return true; // Keep the message channel open for sendResponse
 });
 
 function startRefreshTimer(tabId, interval, limit = 0, notify = false) {
+	console.log('Starting refresh timer:', { tabId, interval, limit, notify });
 	stopRefreshTimer(tabId);
 	refreshCounts[tabId] = 0;
 	
@@ -35,8 +42,13 @@ function startRefreshTimer(tabId, interval, limit = 0, notify = false) {
 		lastRefresh: Date.now()
 	};
 
+	// Create notification for timer start
+	if (notify) {
+		showNotification('Timer Started', `Auto-refresh started for tab (every ${formatTime(interval)})`);
+	}
+
 	refreshTimers[tabId] = setInterval(() => {
-		if (activePages[tabId].isPaused) return;
+		if (activePages[tabId]?.isPaused) return;
 
 		chrome.tabs.get(tabId, (tab) => {
 			if (chrome.runtime.lastError) {
@@ -49,7 +61,7 @@ function startRefreshTimer(tabId, interval, limit = 0, notify = false) {
 			if (activePages[tabId].limit > 0 && refreshCounts[tabId] >= activePages[tabId].limit) {
 				stopRefreshTimer(tabId);
 				if (activePages[tabId].notify) {
-					showNotification(tab.title, 'Refresh limit reached');
+					showNotification('Limit Reached', `Refresh limit reached for ${tab.title}`);
 				}
 				return;
 			}
@@ -60,13 +72,25 @@ function startRefreshTimer(tabId, interval, limit = 0, notify = false) {
 			activePages[tabId].lastRefresh = Date.now();
 
 			if (activePages[tabId].notify) {
-				showNotification(tab.title, `Page refreshed (${refreshCounts[tabId]}/${activePages[tabId].limit || '∞'})`);
+				showNotification('Page Refreshed', 
+					`${tab.title} (${refreshCounts[tabId]}/${activePages[tabId].limit || 'unlimited'})`
+				);
 			}
 
-			// Update status
 			updatePageStatus(tabId, true);
 		});
-	}, interval);
+	}, Math.max(1000, interval));
+}
+
+// Add helper function for time formatting
+function formatTime(ms) {
+	if (ms < 60000) {
+		return `${Math.round(ms/1000)} seconds`;
+	} else if (ms < 3600000) {
+		return `${Math.round(ms/60000)} minutes`;
+	} else {
+		return `${Math.round(ms/3600000)} hours`;
+	}
 }
 
 function pauseRefreshTimer(tabId) {
@@ -95,11 +119,16 @@ function stopRefreshTimer(tabId) {
 }
 
 function showNotification(title, message) {
-	chrome.notifications.create({
+	const options = {
 		type: 'basic',
-		iconUrl: 'icon48.png',
+		iconUrl: 'icon48.svg',
 		title: 'AutoRefresh',
-		message: `${title}: ${message}`
+		message: `${title}: ${message}`,
+		priority: 2
+	};
+	
+	chrome.notifications.create('', options, (notificationId) => {
+		console.log('Notification created:', notificationId); // Debug log
 	});
 }
 

@@ -20,6 +20,16 @@ document.addEventListener('DOMContentLoaded', () => {
 	// Theme toggle
 	document.querySelector('.theme-toggle').addEventListener('click', toggleTheme);
 
+	// Load notification preference
+	chrome.storage.local.get(['notifyOnRefresh'], (result) => {
+		document.getElementById('notifyOnRefresh').checked = result.notifyOnRefresh || false;
+	});
+
+	// Save notification preference when changed
+	document.getElementById('notifyOnRefresh').addEventListener('change', (e) => {
+		chrome.storage.local.set({ notifyOnRefresh: e.target.checked });
+	});
+
 	// Tab switching
 	document.querySelectorAll('.tab').forEach(tab => {
 		tab.addEventListener('click', () => {
@@ -43,73 +53,133 @@ document.addEventListener('DOMContentLoaded', () => {
 	document.querySelectorAll('.timer-options button').forEach(button => {
 		button.addEventListener('click', () => {
 			const minutes = parseInt(button.dataset.time);
-			addCurrentPage(minutes * 60 * 1000);
+			const notify = document.getElementById('notifyOnRefresh').checked;
+			const refreshLimit = parseInt(document.getElementById('refreshLimit').value) || 0;
+			
+			chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
+				const tab = tabs[0];
+				const domain = new URL(tab.url).hostname;
+				const interval = Math.floor(minutes * 60 * 1000); // Ensure whole number
+
+				if (pages[tab.id]) {
+					pages[tab.id] = {
+						...pages[tab.id],
+						interval: interval,
+						lastRefresh: Date.now(),
+						refreshLimit: refreshLimit,
+						notify: notify,
+						refreshCount: 0,
+						isActive: true,
+						isPaused: false
+					};
+				} else {
+					pages[tab.id] = {
+						url: tab.url,
+						title: tab.title,
+						domain: domain,
+						interval: interval,
+						lastRefresh: Date.now(),
+						isActive: true,
+						isPaused: false,
+						refreshLimit: refreshLimit,
+						notify: notify,
+						refreshCount: 0
+					};
+				}
+
+				// Save both pages and notification preference
+				chrome.storage.local.set({ 
+					pages: pages,
+					notifyOnRefresh: notify 
+				}, () => {
+					updatePagesList();
+					document.querySelector('.tab[data-tab="manage"]').click();
+					// Send message to background script
+					chrome.runtime.sendMessage({
+						action: 'startRefresh',
+						tabId: tab.id,
+						interval: interval,
+						limit: refreshLimit,
+						notify: notify
+					}, (response) => {
+						console.log('Refresh started:', response);
+					});
+				});
+			});
 		});
 	});
 
 	// Add event listener for custom time
 	document.getElementById('addCustom').addEventListener('click', () => {
-		const time = document.getElementById('customTime').value;
+		const time = parseFloat(document.getElementById('customTime').value);
 		const unit = document.getElementById('timeUnit').value;
-		if (!time) return;
+		const notify = document.getElementById('notifyOnRefresh').checked;
+		const refreshLimit = parseInt(document.getElementById('refreshLimit').value) || 0;
+		
+		if (!time || isNaN(time)) return;
 
 		let milliseconds;
 		switch(unit) {
 			case 'seconds':
-				milliseconds = time * 1000;
+				milliseconds = Math.floor(time * 1000);
 				break;
 			case 'minutes':
-				milliseconds = time * 60 * 1000;
+				milliseconds = Math.floor(time * 60 * 1000);
 				break;
 			case 'hours':
-				milliseconds = time * 60 * 60 * 1000;
+				milliseconds = Math.floor(time * 60 * 60 * 1000);
 				break;
 		}
-		addCurrentPage(milliseconds);
-	});
-});
 
-function addCurrentPage(interval) {
-	const refreshLimit = parseInt(document.getElementById('refreshLimit').value) || 0;
-	const notify = document.getElementById('notifyOnRefresh').checked;
+		chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
+			const tab = tabs[0];
+			const domain = new URL(tab.url).hostname;
 
-	chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
-		const tab = tabs[0];
-		const domain = new URL(tab.url).hostname;
+			if (pages[tab.id]) {
+				pages[tab.id] = {
+					...pages[tab.id],
+					interval: milliseconds,
+					lastRefresh: Date.now(),
+					refreshLimit: refreshLimit,
+					notify: notify,
+					refreshCount: 0
+				};
+			} else {
+				pages[tab.id] = {
+					url: tab.url,
+					title: tab.title,
+					domain: domain,
+					interval: milliseconds,
+					lastRefresh: Date.now(),
+					isActive: true,
+					isPaused: false,
+					refreshLimit: refreshLimit,
+					notify: notify,
+					refreshCount: 0
+				};
+			}
 
-		if (pages[tab.id]) {
-			pages[tab.id].interval = interval;
-			pages[tab.id].lastRefresh = Date.now();
-			pages[tab.id].refreshLimit = refreshLimit;
-			pages[tab.id].notify = notify;
-		} else {
-			pages[tab.id] = {
-				url: tab.url,
-				title: tab.title,
-				domain: domain,
-				interval: interval,
-				lastRefresh: Date.now(),
-				isActive: true,
-				isPaused: false,
-				refreshLimit: refreshLimit,
-				notify: notify,
-				refreshCount: 0
-			};
-		}
-		
-		chrome.storage.local.set({pages: pages}, () => {
-			updatePagesList();
-			document.querySelector('.tab[data-tab="manage"]').click();
-			chrome.runtime.sendMessage({
-				action: 'startRefresh',
-				tabId: tab.id,
-				interval: interval,
-				limit: refreshLimit,
-				notify: notify
+			// Save notification preference globally
+			chrome.storage.local.set({ 
+				pages: pages,
+				notifyOnRefresh: notify 
+			}, () => {
+				updatePagesList();
+				document.querySelector('.tab[data-tab="manage"]').click();
+				chrome.runtime.sendMessage({
+					action: 'startRefresh',
+					tabId: tab.id,
+					interval: milliseconds,
+					limit: refreshLimit,
+					notify: notify
+				});
 			});
 		});
 	});
-}
+});
+
+
+
 
 function updatePagesList() {
 	const pagesList = document.getElementById('pagesList');
